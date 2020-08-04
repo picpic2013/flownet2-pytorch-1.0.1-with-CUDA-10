@@ -37,16 +37,18 @@ L1 and L2 losses with multi-scale support are available in [losses.py](./losses.
 
 ## Installation 
 
-    # get flownet2-pytorch source
-    git clone https://github.com/NVIDIA/flownet2-pytorch.git
-    cd flownet2-pytorch
+```bash
+# get flownet2-pytorch source
+git clone https://github.com/NVIDIA/flownet2-pytorch.git
+cd flownet2-pytorch
 
-	  # creates flownet2_environment.yml
-		conda env create  
-		conda activate flownet2
+# creates flownet2_environment.yml
+conda env create  
+conda activate flownet2
 
-    # install custom layers
-    bash install.sh
+# install custom layers
+bash install.sh
+```
     
 ### Python requirements 
 Currently, the code supports python 3
