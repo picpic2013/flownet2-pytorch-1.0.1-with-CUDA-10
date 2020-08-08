@@ -8,3 +8,5 @@ _ext/
 build/
 dist/
 *.egg_info
+*.tar
+networks/*_package/*
