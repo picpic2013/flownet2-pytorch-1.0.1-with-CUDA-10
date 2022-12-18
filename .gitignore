@@ -10,3 +10,10 @@ dist/
 *.egg_info
 *.tar
 networks/*_package/*
+
+.vscode
+ckpt
+data/*
+outputs/*
+!outputs/results
+outputs/results/*

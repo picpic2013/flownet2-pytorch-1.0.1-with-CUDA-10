@@ -10,6 +10,7 @@ from glob import glob
 import utils.frame_utils as frame_utils
 
 from scipy.misc import imread, imresize
+import cv2
 
 class StaticRandomCrop(object):
     def __init__(self, image_size, crop_size):
@@ -27,6 +28,60 @@ class StaticCenterCrop(object):
         self.h, self.w = image_size
     def __call__(self, img):
         return img[(self.h-self.th)//2:(self.h+self.th)//2, (self.w-self.tw)//2:(self.w+self.tw)//2,:]
+
+class PKUClassDataset(data.Dataset):
+    def __init__(self, args, is_cropped = False, root=None):
+        self.args = args
+        self.rootFolder = root
+        self.is_cropped = is_cropped
+        self.crop_size = args.crop_size
+        self.render_size = args.inference_size
+        self.imgList = [
+            'bamboo', 'building', 'crossing', 'fern', 'horns', 'teddy'
+        ]
+
+    def __len__(self):
+        return len(self.imgList) * 2
+
+    def __getitem__(self, index):
+        index0 = index // 2
+        index1 = index % 2
+
+        path1 = os.path.join(self.rootFolder, '%s%02d.png' % (self.imgList[index0], 1))
+        path2 = os.path.join(self.rootFolder, '%s%02d.png' % (self.imgList[index0], 2))
+
+        if index1 == 1:
+            path1, path2 = path2, path1
+
+        img1 = cv2.imread(path1)
+        img2 = cv2.imread(path2)
+
+        images = [img1, img2]
+        image_size = img1.shape[:2]
+
+        H, W, _ = img1.shape
+        flow = np.zeros([H, W, 2])
+
+        frame_size = img1.shape
+        render_size = self.render_size
+        if (render_size[0] < 0) or (render_size[1] < 0) or (frame_size[0]%64) or (frame_size[1]%64):
+            render_size[0] = ( (frame_size[0])//64 ) * 64
+            render_size[1] = ( (frame_size[1])//64 ) * 64
+
+        if self.is_cropped:
+            cropper = StaticRandomCrop(image_size, self.crop_size)
+        else:
+            cropper = StaticCenterCrop(image_size, render_size)
+        images = list(map(cropper, images))
+        flow = cropper(flow)
+
+        images = np.array(images).transpose(3,0,1,2)
+        flow = flow.transpose(2,0,1)
+
+        images = torch.from_numpy(images.astype(np.float32))
+        flow = torch.from_numpy(flow.astype(np.float32))
+
+        return [images], [flow]
 
 class MpiSintel(data.Dataset):
     def __init__(self, args, is_cropped = False, root = '', dstype = 'clean', replicates = 1):
@@ -392,17 +447,20 @@ transforms = torchvision.transforms.Compose([
     torchvision.transforms.ToTensor(),
     torchvision.transforms.Normalize([0.5], [0.5])
 ])
-dataset = ImageFolderWithPaths(data_dir, transform=transforms) # our custom dataset
-dataloader = torch.utils.data.DataLoader(dataset)
+# dataset = ImageFolderWithPaths(data_dir, transform=transforms) # our custom dataset
+dataset = None # our custom dataset
+
+# dataloader = torch.utils.data.DataLoader(dataset)
+dataloader = None
 
 # iterate over data
-inputs, labels, paths = [], [], []
-for input, label, path in dataloader:
-    # use the above variables freely
-    print(input, label, path)
-    image1, image2 = input
-    label1, label2 = label
-    path1, path2 = path
+# inputs, labels, paths = [], [], []
+# for input, label, path in dataloader:
+#     # use the above variables freely
+#     print(input, label, path)
+#     image1, image2 = input
+#     label1, label2 = label
+#     path1, path2 = path
 '''
 import argparse
 import sys, os

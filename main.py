@@ -16,6 +16,8 @@ from os.path import *
 import models, losses, datasets
 from utils import flow_utils, tools
 
+from pictest.utils import calculatePSNRAndRender
+
 # fp32 copy of parameters for update
 global param_copy
 
@@ -385,13 +387,17 @@ if __name__ == '__main__':
             # import IPython; IPython.embed()
             if args.save_flow or args.render_validation:
                 for i in range(args.inference_batch_size):
-                    _pflow = output[i].data.cpu().numpy().transpose(1, 2, 0)
-                    flow_utils.writeFlow( join(flow_folder, '%06d.flo'%(batch_idx * args.inference_batch_size + i)),  _pflow)
                     
-                    # You can comment out the plt block in visulize_flow_file() for real-time visualization
-                    if args.inference_visualize:
-                        flow_utils.visulize_flow_file(
-                            join(flow_folder, '%06d.flo' % (batch_idx * args.inference_batch_size + i)),flow_vis_folder)
+                    img1, img2 = data[0][0].permute(1, 0, 2, 3)
+                    calculatePSNRAndRender(img1.cpu(), img2.cpu(), output[0].cpu(), batch_idx)
+
+                    # _pflow = output[i].data.cpu().numpy().transpose(1, 2, 0)
+                    # flow_utils.writeFlow( join(flow_folder, '%06d.flo'%(batch_idx * args.inference_batch_size + i)),  _pflow)
+                    
+                    # # You can comment out the plt block in visulize_flow_file() for real-time visualization
+                    # if args.inference_visualize:
+                    #     flow_utils.visulize_flow_file(
+                    #         join(flow_folder, '%06d.flo' % (batch_idx * args.inference_batch_size + i)),flow_vis_folder)
                    
                             
             progress.set_description('Inference Averages for Epoch {}: '.format(epoch) + tools.format_dictionary_of_losses(loss_labels, np.array(statistics).mean(axis=0)))

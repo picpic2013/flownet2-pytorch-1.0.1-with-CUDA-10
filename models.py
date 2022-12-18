@@ -15,7 +15,7 @@ try:
     from networks import FlowNetFusion
 
     from networks.submodules import *
-except:
+except Exception as e:
     from .networks.resample2d_package.resample2d import Resample2d
     from .networks.channelnorm_package.channelnorm import ChannelNorm
 
